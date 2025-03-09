@@ -45,6 +45,16 @@ subprojects {
             failOnChangingVersions()
         }
     }
+    
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            jvmTarget = JavaVersion.VERSION_17.toString()
+            freeCompilerArgs += listOf(
+                "-opt-in=kotlin.RequiresOptIn",
+                "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+            )
+        }
+    }
 }
 
 // Enable Gradle Build Cache
