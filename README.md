@@ -14,6 +14,8 @@ This repository contains several in-depth documents on different aspects of Andr
 2. [ML Kit Pose Detection](ml-kit-pose-detection.md) - Using Google's ML Kit for skeletal tracking
 3. [ARCore for Augmented Reality](arcore-augmented-reality.md) - Building AR experiences with Google's ARCore
 4. [SceneView for 3D and AR](sceneview-3d-ar.md) - Modern library for simplified 3D and AR development
+5. [Clean Architecture Guide](clean-architecture-guide.md) - Building conflict-free Android apps with camera features
+6. [React Native Vision Camera Analysis](react-native-vision-camera-analysis.md) - Evaluation of Vision Camera library for React Native integration
 
 ## Key Technologies
 
@@ -72,48 +74,67 @@ SceneView is a modern library that simplifies working with 3D content and AR in 
 - [SceneView Documentation](https://sceneview.github.io/)
 - [AR Model Viewer Sample](https://github.com/SceneView/sceneview-android/tree/main/samples/ar-model-viewer)
 
+### 5. React Native Vision Camera
+
+React Native Vision Camera is a powerful library for creating camera applications in React Native with native performance:
+
+- High-performance native camera implementation with React Native UI
+- Frame processor API for ML and AR integration
+- Direct access to Camera2 API features
+- Optimized frame processing with worklets
+
+**Resources:**
+- [React Native Vision Camera](https://github.com/mrousavy/react-native-vision-camera)
+- [Vision Camera Documentation](https://react-native-vision-camera.com/)
+- [Frame Processors Guide](https://react-native-vision-camera.com/docs/guides/frame-processors)
+
 ## Implementation Approaches
 
-### Approach 1: Camera2 API with ML Kit
+### Approach 1: Native Android with Clean Architecture
 
-This approach involves using the Camera2 API to capture frames and ML Kit to process them for pose detection:
+This approach uses pure native Android development with a clean architecture pattern:
 
-1. Set up a camera preview using Camera2 API
-2. Process frames using ML Kit's pose detection API
-3. Visualize detected poses by drawing skeletal landmarks
-4. Implement custom logic based on detected poses
-
-**Advantages:**
-- Fine-grained control over camera
-- Efficient processing pipeline
-- No dependency on AR features (works on more devices)
-
-### Approach 2: ARCore with SceneView
-
-This approach leverages ARCore and SceneView for more advanced AR experiences:
-
-1. Set up an AR scene using SceneView
-2. Use ARCore for plane detection and tracking
-3. Integrate ML Kit for pose detection if needed
-4. Place virtual content in the real world based on detected poses or planes
+1. Implement camera functionality using Camera2 API or CameraX
+2. Process frames with ML Kit for pose detection
+3. Integrate ARCore for augmented reality features
+4. Use SceneView for simplified 3D and AR rendering
+5. Organize code with clean architecture principles
 
 **Advantages:**
-- Rich AR capabilities (plane detection, light estimation, etc.)
-- Simplified 3D content handling
-- Modern API with Jetpack Compose support
+- Maximum performance and control
+- Direct access to all native APIs
+- Clean, modular code structure
+- Avoids cross-platform complications
 
-## Sample Projects
+### Approach 2: React Native with Vision Camera
 
-The following samples demonstrate different aspects of camera usage:
+This approach leverages React Native for UI while maintaining native performance for camera operations:
 
-1. [CameraX with ML Kit](https://github.com/android/camera-samples/tree/main/CameraX-MLKit) - Basic QR code scanning with CameraX and ML Kit
-2. [ML Kit Vision Quickstart](https://github.com/googlesamples/mlkit/tree/master/android/vision-quickstart) - Comprehensive examples of ML Kit vision features including pose detection
-3. [AR Model Viewer](https://github.com/SceneView/sceneview-android/tree/main/samples/ar-model-viewer) - ARCore and SceneView for AR experiences
+1. Use React Native for application UI
+2. Implement camera functionality with Vision Camera
+3. Create custom frame processors for ML Kit and ARCore integration
+4. Bridge between React Native and native components
+
+**Advantages:**
+- Cross-platform UI development
+- Near-native camera performance
+- Faster UI iteration
+- Access to React Native ecosystem
+
+## Avoiding Common Issues
+
+Our research has identified several key practices to avoid common issues:
+
+1. **Dependency Management**: Centralize dependency versions and use version catalogs
+2. **Gradle Configuration**: Properly configure Gradle with consistent SDK versions
+3. **Clean Architecture**: Separate business logic from framework dependencies
+4. **Module Organization**: Structure your app into feature modules with clear boundaries
+5. **Camera Lifecycle Management**: Properly handle camera lifecycle events
+
+For detailed guidelines on building conflict-free Android applications, see our [Clean Architecture Guide](clean-architecture-guide.md).
 
 ## Conclusion
 
-Android offers multiple robust approaches for implementing camera-based applications with skeletal tracking and AR capabilities. The choice between Camera2 API with ML Kit versus ARCore with SceneView depends on specific requirements such as device compatibility, AR needs, and performance considerations.
-
-For applications requiring only pose detection without AR, the Camera2 API with ML Kit provides a more lightweight solution. For full AR experiences with 3D content, ARCore with SceneView offers a more comprehensive framework.
+Android offers multiple robust approaches for implementing camera-based applications with skeletal tracking and AR capabilities. The choice between a pure native approach versus a React Native hybrid depends on specific requirements such as device compatibility, AR needs, performance considerations, and development team expertise.
 
 Both approaches are well-documented and have active communities, making them viable options for professional Android development in 2025.
