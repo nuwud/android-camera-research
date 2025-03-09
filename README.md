@@ -1,140 +1,86 @@
 # Android Camera Research
 
-A comprehensive research repository on Android camera development, with focus on skeletal tracking and augmented reality.
+A comprehensive research repository on Android camera development, with a focus on skeletal tracking and augmented reality using clean architecture patterns to avoid common Gradle and native code conflicts.
 
 ## Overview
 
-This repository documents research on various approaches to implementing camera functionality in Android applications without relying on Expo, focusing on native Android development using Camera2 API, ML Kit for pose detection, and ARCore for augmented reality.
+This project explores various approaches for building Android camera applications that incorporate skeletal tracking and AR capabilities. By following clean architecture patterns, we aim to minimize the common issues that arise when integrating Camera2 API, ML Kit, ARCore, and other libraries that tend to conflict with each other.
 
-## Detailed Documentation
+## Repository Structure
 
-This repository contains several in-depth documents on different aspects of Android camera implementation:
+### Core Documentation
 
-1. [Camera2 API](camera2-api.md) - Low-level camera access with full control over camera hardware
-2. [ML Kit Pose Detection](ml-kit-pose-detection.md) - Using Google's ML Kit for skeletal tracking
-3. [ARCore for Augmented Reality](arcore-augmented-reality.md) - Building AR experiences with Google's ARCore
-4. [SceneView for 3D and AR](sceneview-3d-ar.md) - Modern library for simplified 3D and AR development
-5. [Clean Architecture Guide](clean-architecture-guide.md) - Building conflict-free Android apps with camera features
-6. [React Native Vision Camera Analysis](react-native-vision-camera-analysis.md) - Evaluation of Vision Camera library for React Native integration
+- **[Camera2 API](camera2-api.md)**: Detailed overview of the Camera2 API implementation
+- **[ML Kit Pose Detection](ml-kit-pose-detection.md)**: Guide to implementing skeletal tracking with ML Kit
+- **[ARCore Augmented Reality](arcore-augmented-reality.md)**: ARCore implementation for AR experiences
+- **[SceneView 3D/AR](sceneview-3d-ar.md)**: Using SceneView for 3D and AR development
+- **[Clean Architecture Guide](clean-architecture-guide.md)**: Architecture patterns to avoid dependency conflicts
+- **[React Native Vision Camera Analysis](react-native-vision-camera-analysis.md)**: Hybrid approach analysis
 
-## Key Technologies
+### Code Samples
 
-### 1. Camera2 API
+- **[Camera2 + ML Kit Integration](code-samples/camera2-mlkit-integration.kt)**: Integration between Camera2 and ML Kit for pose detection
+- **[ML Kit + ARCore Integration](code-samples/mlkit-arcore-integration.kt)**: Combining pose detection with AR experiences
 
-The Camera2 API provides fine-grained control over the camera hardware in Android devices. It offers features such as:
+### Project Structure
 
-- Manual control over camera settings (exposure, focus, etc.)
-- Access to raw camera data
-- Support for multiple cameras
-- Better performance for real-time processing
+- **[Build Setup](project-structure/build.gradle.kts)**: Root build configuration to avoid conflicts
+- **[Dependency Management](project-structure/buildSrc/src/main/kotlin/Dependencies.kt)**: Centralized dependency management
+- **[Module Configuration](project-structure/feature-camera/build.gradle.kts)**: Feature module build configuration
 
-**Resources:**
-- [Official Camera2 API Guide](https://developer.android.com/guide/topics/media/camera)
-- [Camera2 Samples Repository](https://github.com/android/camera-samples)
+### Sample Project
 
-### 2. ML Kit for Pose Detection
+- **[Sample Application](sample-project/)**: Demonstration of clean architecture principles with camera, ML Kit, and ARCore
 
-Google ML Kit provides an easy-to-use API for pose detection that can track up to 33 body landmarks in real-time. Key features include:
+### Performance and Best Practices
 
-- Full-body pose detection (including face, torso, arms, legs)
-- Support for both static images and video streams
-- Options for accuracy vs. performance tradeoffs
-- Classification capabilities to identify specific poses (e.g., squats, push-ups)
+- **[Performance Benchmarks](benchmarks/camera-ml-ar-benchmarks.md)**: Comparative benchmarks of different approaches
+- **[Threading & Memory Management](guides/threading-memory-management.md)**: Best practices for resource management
 
-**Resources:**
-- [ML Kit Pose Detection Documentation](https://developers.google.com/ml-kit/vision/pose-detection)
-- [ML Kit Samples Repository](https://github.com/googlesamples/mlkit)
-- [PoseDetection-MLKit Example](https://github.com/icanerdogan/PoseDetection-MLKit)
-- [Pose Estimation Android App](https://github.com/nevinbaiju/pose_estimation_android_app)
+### CI/CD
 
-### 3. ARCore for Augmented Reality
+- **[GitHub Actions Workflow](ci-cd/.github/workflows/android.yml)**: Continuous integration configuration
 
-ARCore is Google's platform for building augmented reality experiences on Android. It provides:
+## Key Findings
 
-- Motion tracking: Understanding the phone's position relative to the world
-- Environmental understanding: Detecting surfaces and their size/location
-- Light estimation: Estimating current lighting conditions for realistic rendering
+### Integration Challenges
 
-**Resources:**
-- [ARCore Developer Guide](https://developers.google.com/ar/develop/java/quickstart)
-- [ARCore Android SDK](https://github.com/google-ar/arcore-android-sdk)
-- [Awesome ARCore Collection](https://github.com/olucurious/Awesome-ARCore)
+1. **Camera Access Conflicts**: Camera2 API and ARCore often compete for camera access, requiring careful resource management and camera sharing configurations.
 
-### 4. SceneView for 3D and AR
+2. **Dependency Versioning**: ML Kit, ARCore, and Camera libraries frequently have conflicting dependency requirements, necessitating centralized dependency management.
 
-SceneView is a modern library that simplifies working with 3D content and AR in Android. It is built on top of Google's Filament rendering engine and ARCore, providing:
+3. **Native Code Issues**: NDK and ABI configurations are critical when combining libraries with native components.
 
-- Both Jetpack Compose and traditional View implementations
-- Simplified 3D model loading and rendering
-- Easy integration with ARCore for AR experiences
-- Physics and collision detection
+4. **Threading Complexity**: Frame processing, ML inference, and AR rendering each require proper threading strategies to maintain performance.
 
-**Resources:**
-- [SceneView Android](https://github.com/SceneView/sceneview-android)
-- [SceneView Documentation](https://sceneview.github.io/)
-- [AR Model Viewer Sample](https://github.com/SceneView/sceneview-android/tree/main/samples/ar-model-viewer)
+### Recommended Approach
 
-### 5. React Native Vision Camera
+Based on our research, the most effective approach for integrating these technologies involves:
 
-React Native Vision Camera is a powerful library for creating camera applications in React Native with native performance:
+1. **Clean Architecture**: Separation of concerns through well-defined modules
+2. **Centralized Dependency Management**: Using Gradle Kotlin DSL and version catalogs
+3. **Explicit Thread Management**: Dedicated threads for camera, processing, and rendering
+4. **Shared Camera Configuration**: Proper configuration of Camera2 API for shared use with ARCore
+5. **Optimized Frame Processing**: Selective frame processing and resolution reduction for ML Kit
 
-- High-performance native camera implementation with React Native UI
-- Frame processor API for ML and AR integration
-- Direct access to Camera2 API features
-- Optimized frame processing with worklets
+## Getting Started
 
-**Resources:**
-- [React Native Vision Camera](https://github.com/mrousavy/react-native-vision-camera)
-- [Vision Camera Documentation](https://react-native-vision-camera.com/)
-- [Frame Processors Guide](https://react-native-vision-camera.com/docs/guides/frame-processors)
+To explore this research repository:
 
-## Implementation Approaches
+1. Browse the core documentation files to understand the fundamental concepts
+2. Examine the code samples for practical implementation examples
+3. Review the project structure for clean architecture patterns
+4. Check the sample project for a complete integration example
 
-### Approach 1: Native Android with Clean Architecture
+## Contributing
 
-This approach uses pure native Android development with a clean architecture pattern:
+Contributions to this research are welcome. Areas that would benefit from additional exploration include:
 
-1. Implement camera functionality using Camera2 API or CameraX
-2. Process frames with ML Kit for pose detection
-3. Integrate ARCore for augmented reality features
-4. Use SceneView for simplified 3D and AR rendering
-5. Organize code with clean architecture principles
+- Performance optimization techniques for lower-end devices
+- Integration with additional ML models beyond pose detection
+- Advanced AR features and interactions based on skeletal tracking
+- Improved camera resource management strategies
 
-**Advantages:**
-- Maximum performance and control
-- Direct access to all native APIs
-- Clean, modular code structure
-- Avoids cross-platform complications
+## License
 
-### Approach 2: React Native with Vision Camera
-
-This approach leverages React Native for UI while maintaining native performance for camera operations:
-
-1. Use React Native for application UI
-2. Implement camera functionality with Vision Camera
-3. Create custom frame processors for ML Kit and ARCore integration
-4. Bridge between React Native and native components
-
-**Advantages:**
-- Cross-platform UI development
-- Near-native camera performance
-- Faster UI iteration
-- Access to React Native ecosystem
-
-## Avoiding Common Issues
-
-Our research has identified several key practices to avoid common issues:
-
-1. **Dependency Management**: Centralize dependency versions and use version catalogs
-2. **Gradle Configuration**: Properly configure Gradle with consistent SDK versions
-3. **Clean Architecture**: Separate business logic from framework dependencies
-4. **Module Organization**: Structure your app into feature modules with clear boundaries
-5. **Camera Lifecycle Management**: Properly handle camera lifecycle events
-
-For detailed guidelines on building conflict-free Android applications, see our [Clean Architecture Guide](clean-architecture-guide.md).
-
-## Conclusion
-
-Android offers multiple robust approaches for implementing camera-based applications with skeletal tracking and AR capabilities. The choice between a pure native approach versus a React Native hybrid depends on specific requirements such as device compatibility, AR needs, performance considerations, and development team expertise.
-
-Both approaches are well-documented and have active communities, making them viable options for professional Android development in 2025.
+MIT
