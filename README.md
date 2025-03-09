@@ -6,6 +6,25 @@ A comprehensive research repository on Android camera development, with a focus 
 
 This project explores various approaches for building Android camera applications that incorporate skeletal tracking and AR capabilities. By following clean architecture patterns, we aim to minimize the common issues that arise when integrating Camera2 API, ML Kit, ARCore, and other libraries that tend to conflict with each other.
 
+## 🚀 Quick Start for Beginners
+
+### Want to skip the research and just implement camera features?
+
+Use our easy setup tools designed for beginners:
+
+1. **One-click setup script**:
+   - 💻 [Bash Script](easy-setup/setup.sh) for Mac/Linux users
+   - 🖥️ [PowerShell Script](easy-setup/setup.ps1) for Windows users
+
+2. **IDE Integration**:
+   - 🛠️ [Android Studio Guide](easy-setup/android-studio-plugin/README.md)
+   - 📝 [VSCode Setup](easy-setup/vscode/README.md)
+
+3. **Starter Templates**:
+   - 📦 [Ready-to-use project templates](easy-setup/starter-templates/README.md)
+
+Check the [Easy Setup Guide](easy-setup/README.md) for more details!
+
 ## Repository Structure
 
 ### Core Documentation
@@ -65,12 +84,18 @@ Based on our research, the most effective approach for integrating these technol
 
 ## Getting Started
 
-To explore this research repository:
+For researchers and advanced developers looking to understand the details:
 
 1. Browse the core documentation files to understand the fundamental concepts
 2. Examine the code samples for practical implementation examples
 3. Review the project structure for clean architecture patterns
 4. Check the sample project for a complete integration example
+
+For beginners who just want to implement these features quickly:
+
+1. Use our [Easy Setup Tools](easy-setup/README.md) for instant integration
+2. Try the pre-configured [Starter Templates](easy-setup/starter-templates/README.md)
+3. Follow the simple step-by-step guides
 
 ## Contributing
 
