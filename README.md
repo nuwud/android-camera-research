@@ -42,6 +42,8 @@ Check the [Easy Setup Guide](easy-setup/README.md) for more details!
 
 - **[Camera2 + ML Kit Integration](code-samples/camera2-mlkit-integration.kt)**: Integration between Camera2 and ML Kit for pose detection
 - **[ML Kit + ARCore Integration](code-samples/mlkit-arcore-integration.kt)**: Combining pose detection with AR experiences
+- **[Multi-Subject Tracker](code-samples/multi-subject-tracker.kt)**: Implementation for tracking multiple humans, cats, and dogs simultaneously
+- **[Skeletal Visualization](code-samples/skeletal-visualization-renderer.kt)**: Rendering skeletal overlays for different subject types
 
 ### Project Structure
 
@@ -56,10 +58,14 @@ Check the [Easy Setup Guide](easy-setup/README.md) for more details!
 ### Performance and Best Practices
 
 - **[Performance Benchmarks](benchmarks/camera-ml-ar-benchmarks.md)**: Comparative benchmarks of different approaches
+- **[Multi-Skeletal Tracking Benchmarks](benchmarks/multi-skeletal-tracking-benchmarks.md)**: Benchmarking methodologies for multi-subject tracking systems
 - **[Threading & Memory Management](guides/threading-memory-management.md)**: Best practices for resource management
 
 ### Advanced Research
 
+- **[Multi-Skeletal Tracking](research/multi-skeletal-tracking.md)**: Research on tracking multiple subjects (humans, cats, dogs) simultaneously
+- **[Animal Pose Detection Model](research/animal-pose-detection-model.md)**: Architecture for custom TensorFlow Lite models for animal pose detection
+- **[React Native Camera Integration](research/react-native-camera-integration.md)**: Guide for integrating camera functionality with multi-subject tracking in React Native
 - **[npm/Node.js Build Issues](research/npm-node-advanced-troubleshooting.md)**: In-depth troubleshooting for React Native integrations
 - **[React Native Integration Guide](research/react-native-integration-guide.md)**: Detailed guide for integrating React Native with camera functionality
 - **[CI/CD Build Solutions](research/ci-cd-build-solutions.md)**: Solutions for CI/CD build issues with camera projects
@@ -82,6 +88,8 @@ Check the [Easy Setup Guide](easy-setup/README.md) for more details!
 
 5. **npm/Node.js Build Issues**: React Native camera integrations face unique challenges with npm scripts, patch-package, buffer handling, and module compilation.
 
+6. **Multi-Subject Attribution**: Maintaining correct subject-skeleton associations during interactions between multiple subjects poses significant challenges.
+
 ### Recommended Approach
 
 Based on our research, the most effective approach for integrating these technologies involves:
@@ -92,6 +100,8 @@ Based on our research, the most effective approach for integrating these technol
 4. **Shared Camera Configuration**: Proper configuration of Camera2 API for shared use with ARCore or Vuforia
 5. **Optimized Frame Processing**: Selective frame processing and resolution reduction for ML Kit
 6. **Strategic Camera Provider Selection**: Choosing between Camera2, ARCore, and Vuforia based on specific use cases
+7. **Two-Stage Detection**: First detect subjects, then apply appropriate pose detection models
+8. **Tracking Algorithms**: Implement IoU-based tracking to maintain subject identity across frames
 
 ## Technology Comparison
 
@@ -113,6 +123,16 @@ Based on our research, the most effective approach for integrating these technol
 | **Licensing** | Free | Commercial |
 | **Camera Integration** | Easier with Google APIs | More isolated |
 
+### Pose Detection
+
+| Feature | ML Kit | DeepLabCut | Custom TFLite |
+|---------|--------|------------|---------------|
+| **Multi-subject** | No | Yes | Yes |
+| **Animal Support** | No | Yes | Yes |
+| **Mobile Optimized** | Yes | No | Yes |
+| **Accuracy** | High | Very High | Customizable |
+| **Integration Complexity** | Low | High | Medium |
+
 ## Getting Started
 
 To explore this research repository:
@@ -132,6 +152,8 @@ Contributions to this research are welcome. Areas that would benefit from additi
 - Advanced AR features and interactions based on skeletal tracking
 - Improved camera resource management strategies
 - Hybrid approaches using multiple AR technologies
+- Datasets and training methods for custom animal pose detection models
+- Improved multi-subject tracking algorithms for close interactions
 
 ## License
 
