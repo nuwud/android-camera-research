@@ -36,25 +36,173 @@ object Versions {
 fun applyVersionResolutionStrategy(project: Project) {
     project.configurations.all {
         resolutionStrategy {
+            // Force specific versions to avoid conflicts
             force("androidx.camera:camera-camera2:${Versions.cameraX}")
-            force("androidx.camera:camera-core:${Versions.cameraX}")
             force("androidx.camera:camera-lifecycle:${Versions.cameraX}")
             force("androidx.camera:camera-view:${Versions.cameraX}")
-            
             force("com.google.mlkit:pose-detection:${Versions.mlKit}")
-            force("com.google.mlkit:pose-detection-accurate:${Versions.mlKit}")
-            
             force("com.google.ar:core:${Versions.arCore}")
+            
+            // Avoid using dynamic version numbers
+            failOnDynamicVersions()
+            failOnChangingVersions()
         }
     }
 }
 ```
 
-**Implement a GitHub Actions workflow with explicit caching:**
+**Configure dependency caching in GitHub Actions:**
 
 ```yaml
-# .github/workflows/android.yml
-name: Android CI
+- name: Cache Gradle packages
+  uses: actions/cache@v3
+  with:
+    path: |
+      ~/.gradle/caches
+      ~/.gradle/wrapper
+    key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+    restore-keys: |
+      ${{ runner.os }}-gradle-
+```
+
+### 2. Native Code (NDK) Issues
+
+Projects with ARCore or ML Kit often rely on native code that can break in CI environments.
+
+#### Key Symptoms
+- Build fails with `Native library (lib/x86/...) not found`
+- Errors related to ABI configurations
+- Inconsistent build failures across different CI environments
+
+#### Solutions
+
+**Explicitly define NDK version and ABI configurations:**
+
+```groovy
+// In app/build.gradle
+android {
+    ndkVersion "25.2.9519653" // Use explicit version
+    
+    defaultConfig {
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+    }
+    
+    packagingOptions {
+        pickFirst "**/libc++_shared.so"
+        pickFirst "**/libfbjni.so"
+    }
+}
+```
+
+**Configure NDK in GitHub Actions:**
+
+```yaml
+- name: Setup Android SDK and NDK
+  uses: android-actions/setup-android@v2
+  with:
+    ndk-version: '25.2.9519653'
+    sdk-version: '34'
+
+- name: Print NDK Path for debugging
+  run: echo $ANDROID_NDK_HOME
+```
+
+### 3. Memory and Timeout Issues
+
+Camera and ML projects often require more memory and time to build.
+
+#### Key Symptoms
+- Out of memory errors during build
+- Build timeouts in CI
+- Gradle daemon unexpectedly exits
+
+#### Solutions
+
+**Configure Gradle memory settings:**
+
+Create a `gradle.properties` file:
+
+```properties
+# Increase memory allocations
+org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Dkotlin.daemon.jvm.options=-Xmx2g
+
+# Enable parallel builds
+org.gradle.parallel=true
+
+# Enable configuration on demand
+org.gradle.configureondemand=true
+
+# Enable the build cache
+org.gradle.caching=true
+```
+
+**Adjust GitHub Actions timeout and memory:**
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # Increase from default
+    
+    steps:
+      - name: Increase SWAP space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+      
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug --max-workers=2 --stacktrace
+```
+
+### 4. React Native Integration Issues
+
+When integrating React Native with Camera/AR capabilities, additional issues can arise.
+
+#### Key Symptoms
+- `npm install` or `yarn install` failures in CI
+- Postinstall script failures when patching native modules
+- JavaScript bundling errors in CI environment
+
+#### Solutions
+
+**Configure npm cache and explicit versions:**
+
+```yaml
+- name: Setup Node.js
+  uses: actions/setup-node@v3
+  with:
+    node-version: '16.20.0' # Use explicit version
+    cache: 'npm'
+
+- name: Install dependencies with retry
+  uses: nick-invision/retry@v2
+  with:
+    timeout_minutes: 15
+    max_attempts: 3
+    command: npm ci --no-audit --prefer-offline
+```
+
+**Create a CI-specific .npmrc file:**
+
+```
+# .npmrc.ci
+fetch-retries=5
+fetch-retry-mintimeout=20000
+fetch-retry-maxtimeout=120000
+network-timeout=300000
+loglevel=verbose
+legacy-peer-deps=true
+force=true
+```
+
+## Complete GitHub Actions Workflow Example
+
+Here's a complete workflow file that addresses the common issues:
+
+```yaml
+name: Android Camera App CI
 
 on:
   push:
@@ -65,430 +213,162 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
     - uses: actions/checkout@v3
-    
-    - name: Set up JDK
+
+    - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
-    
+        cache: gradle
+
     - name: Setup Android SDK
       uses: android-actions/setup-android@v2
-    
+      with:
+        ndk-version: '25.2.9519653'
+        sdk-version: '34'
+        cmake-version: '3.22.1'
+
+    - name: Increase SWAP space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 10
+
     - name: Cache Gradle packages
       uses: actions/cache@v3
       with:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
-          ~/.m2/repository
         key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
           ${{ runner.os }}-gradle-
-    
+
+    # For React Native projects
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16.20.0'
+        cache: 'npm'
+
+    - name: Install NPM dependencies with retry
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 15
+        max_attempts: 3
+        command: |
+          cp .npmrc.ci .npmrc
+          npm ci --no-audit --prefer-offline
+
+    - name: Check for common dependency issues
+      run: |
+        ./gradlew :app:dependencies | grep -E 'androidx.camera|com.google.mlkit|com.google.ar'
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    
+
     - name: Build with Gradle
-      run: ./gradlew build --no-daemon --stacktrace
-    
-    - name: Archive build artifacts
+      run: ./gradlew assembleDebug --max-workers=2 --stacktrace
+
+    - name: Archive APK
       uses: actions/upload-artifact@v3
       with:
-        name: build-outputs
-        path: app/build/outputs/
+        name: app-debug
+        path: app/build/outputs/apk/debug/app-debug.apk
+
+    # Optional: Run tests
+    - name: Run tests
+      run: ./gradlew test --max-workers=2
 ```
 
-### 2. Native Code (NDK) Issues
+## CI/CD Best Practices for Camera Projects
 
-ARCore and ML Kit may rely on native code, which can cause issues in CI environments.
+### 1. Use Matrix Builds for ABI Testing
 
-#### Key Symptoms
-- Build fails with missing `.so` files
-- Architecture compatibility errors
-- Native build errors in C++ files
-
-#### Solutions
-
-**Configure NDK version explicitly:**
-
-```kotlin
-// build.gradle.kts
-android {
-    ndkVersion = "25.2.9519653"
-    defaultConfig {
-        ndk {
-            // Specify which ABIs to build native code for
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
-        }
-    }
-    
-    // Handle duplicate .so files
-    packagingOptions {
-        jniLibs.pickFirsts.add("**/libc++_shared.so")
-    }
-}
-```
-
-**Set up a matrix build for testing multiple architectures:**
+Test your app across different ABIs to ensure ML Kit and ARCore work correctly:
 
 ```yaml
-# .github/workflows/android-ndk.yml
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        abi: [arm64-v8a, armeabi-v7a, x86, x86_64]
+        abi: [armeabi-v7a, arm64-v8a, x86, x86_64]
+      fail-fast: false
 
     steps:
-    # ... other steps ...
-    
-    - name: Build for specific ABI
-      run: ./gradlew assembleDebug -PtargetAbi=${{ matrix.abi }} --stacktrace
+      # ... other steps ...
+
+      - name: Build with specific ABI
+        run: ./gradlew assembleDebug -PtargetAbi=${{ matrix.abi }}
 ```
 
-### 3. Memory and Performance Issues
+### 2. Implement Dependency Health Checks
 
-Building camera apps with ML and AR can be resource-intensive and cause CI failures.
-
-#### Key Symptoms
-- Build process is killed due to out-of-memory errors
-- Gradle daemon crashes
-- Excessively long build times
-
-#### Solutions
-
-**Configure Gradle memory settings:**
-
-Create a `gradle.properties` file:
-
-```properties
-# gradle.properties
-org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8
-org.gradle.daemon=true
-org.gradle.parallel=true
-org.gradle.caching=true
-org.gradle.configureondemand=true
-
-# Android specific optimizations
-android.useAndroidX=true
-android.enableJetifier=false
-android.nonTransitiveRClass=true
-android.defaults.buildfeatures.buildconfig=true
-android.defaults.buildfeatures.aidl=false
-android.defaults.buildfeatures.renderscript=false
-android.defaults.buildfeatures.resvalues=false
-android.defaults.buildfeatures.shaders=false
-```
-
-**Optimize GitHub Actions workflow memory usage:**
+Regularly audit your dependencies for conflicts:
 
 ```yaml
-# .github/workflows/android-optimize.yml
+- name: Dependency health check
+  run: |
+    ./gradlew :app:dependencyInsight --dependency androidx.camera:camera-camera2
+    ./gradlew :app:dependencyInsight --dependency com.google.mlkit:pose-detection
+    ./gradlew :app:dependencyInsight --dependency com.google.ar:core
+```
+
+### 3. Split large builds into multiple jobs
+
+For complex camera apps, split the workflow:
+
+```yaml
 jobs:
-  build:
+  dependencies:
+    # Job to check and prepare dependencies
     runs-on: ubuntu-latest
-    
     steps:
-    # ... other steps ...
-    
-    - name: Configure system resources
-      run: |
-        # Free up disk space
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /opt/ghc
-        
-        # Check available disk space and memory
-        df -h
-        free -h
-    
-    - name: Build with Gradle (optimized)
-      run: |
-        ./gradlew build \
-          --no-daemon \
-          --max-workers=2 \
-          --parallel \
-          --profile \
-          --scan
-```
+      # Check dependencies and generate lockfiles
 
-### 4. Emulator and UI Testing Issues
-
-Testing camera and AR functionality in CI can be challenging.
-
-#### Key Symptoms
-- Emulator fails to start in CI environment
-- Camera tests hang or timeout
-- ARCore tests cannot run in emulated environment
-
-#### Solutions
-
-**Create a dedicated testing workflow with hardware acceleration:**
-
-```yaml
-# .github/workflows/android-instrumented-tests.yml
-jobs:
-  instrumented-tests:
-    runs-on: macos-latest # macOS runner has better emulator performance
-    
+  build:
+    needs: dependencies
+    runs-on: ubuntu-latest
     steps:
-    # ... other steps ...
-    
-    - name: AVD cache
-      uses: actions/cache@v3
-      id: avd-cache
-      with:
-        path: |
-          ~/.android/avd/*
-          ~/.android/adb*
-        key: avd-${{ matrix.api-level }}
-    
-    - name: Create AVD and generate snapshot for caching
-      if: steps.avd-cache.outputs.cache-hit != 'true'
-      uses: reactivecircus/android-emulator-runner@v2
-      with:
-        api-level: 29
-        target: google_apis
-        arch: x86_64
-        profile: pixel_4
-        cores: 2
-        ram-size: 4096M
-        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back emulated -camera-front emulated
-        script: echo "Generated AVD snapshot for caching."
-    
-    - name: Run instrumented tests
-      uses: reactivecircus/android-emulator-runner@v2
-      with:
-        api-level: 29
-        target: google_apis
-        arch: x86_64
-        profile: pixel_4
-        script: ./gradlew connectedCheck --stacktrace
-```
+      # Actual build steps
 
-**Create a mock configuration for camera tests:**
-
-```kotlin
-// app/src/androidTest/java/com/example/util/CameraMockUtil.kt
-class CameraMockUtil {
-    companion object {
-        fun setupMockCamera() {
-            // Setup mock camera characteristics
-            val mockCameraManager = Mockito.mock(CameraManager::class.java)
-            // ... mock implementation ...
-        }
-    }
-}
-```
-
-## Integration with Firebase Test Lab
-
-For more thorough testing, especially for camera functionality, Firebase Test Lab provides access to real devices.
-
-### Configuration
-
-```yaml
-# .github/workflows/firebase-test-lab.yml
-jobs:
   test:
+    needs: build
     runs-on: ubuntu-latest
-    
     steps:
-    # ... other steps ...
-    
-    - name: Build debug APK and test APK
-      run: |
-        ./gradlew :app:assembleDebug
-        ./gradlew :app:assembleAndroidTest
-    
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v1
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
-    
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
-    
-    - name: Use gcloud CLI
-      run: |
-        gcloud firebase test android run \
-          --type instrumentation \
-          --app app/build/outputs/apk/debug/app-debug.apk \
-          --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
-          --device model=Pixel4,version=30,locale=en,orientation=portrait \
-          --timeout 30m \
-          --results-bucket=gs://${{ secrets.FIREBASE_TEST_BUCKET }} \
-          --results-dir=camera-test-results
+      # Testing steps
 ```
 
-## Optimizing Build Performance
+### 4. Set Up Build Caching Properly
 
-### 1. Incremental Builds
-
-Ensure incremental builds are enabled in your Android project:
-
-```kotlin
-// build.gradle.kts
-android {
-    buildFeatures {
-        buildConfig = true
-    }
-    
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs = listOf("-Xincremental")
-    }
-}
-```
-
-### 2. Module Separation
-
-Separate camera, ML, and AR functionality into different modules for faster builds:
-
-```
-app/
-├── build.gradle
-└── src/
-    
-features/
-├── camera-module/
-│   └── build.gradle
-├── ml-module/
-│   └── build.gradle
-└── ar-module/
-    └── build.gradle
-```
-
-### 3. CI Build Optimization
-
-Optimize CI builds by using dependency caching, incremental builds, and parallel execution:
+Optimize builds with proper caching:
 
 ```yaml
-# .github/workflows/optimized-build.yml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-    # ... other steps ...
-    
-    - name: Configure Gradle properties
-      run: |
-        mkdir -p $HOME/.gradle
-        echo "org.gradle.caching=true" >> $HOME/.gradle/gradle.properties
-        echo "org.gradle.parallel=true" >> $HOME/.gradle/gradle.properties
-        echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" >> $HOME/.gradle/gradle.properties
-    
-    - name: Build specific modules
-      run: |
-        ./gradlew :app:assembleDebug :features:camera-module:assembleDebug :features:ml-module:assembleDebug --parallel
-```
+- name: Cache NPM packages
+  uses: actions/cache@v3
+  with:
+    path: ~/.npm
+    key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+    restore-keys: ${{ runner.os }}-npm-
 
-## Troubleshooting CI Build Failures
-
-### 1. Diagnostic Information
-
-Add diagnostic information to your CI workflow to help troubleshoot failures:
-
-```yaml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-    # ... other steps ...
-    
-    - name: Diagnostic information
-      if: always()
-      run: |
-        echo "=== System Information ==="
-        uname -a
-        df -h
-        free -h
-        
-        echo "=== Java Version ==="
-        java -version
-        
-        echo "=== Gradle Version ==="
-        ./gradlew --version
-        
-        echo "=== Android SDK Info ==="
-        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list
-```
-
-### 2. Build Scans
-
-Enable Gradle build scans for detailed build analytics:
-
-```kotlin
-// settings.gradle.kts
-plugins {
-    id("com.gradle.enterprise") version "3.15.1"
-}
-
-gradleEnterprise {
-    buildScan {
-        termsOfServiceUrl = "https://gradle.com/terms-of-service"
-        termsOfServiceAgree = "yes"
-        publishAlways()
-    }
-}
-```
-
-### 3. Failure Capture
-
-Capture detailed logs and outputs on failure:
-
-```yaml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-    # ... other steps ...
-    
-    - name: Build with Gradle
-      id: gradle
-      run: ./gradlew build --stacktrace
-      continue-on-error: true
-    
-    - name: Capture build logs on failure
-      if: steps.gradle.outcome == 'failure'
-      run: |
-        echo "==== Gradle logs ===="
-        cat $HOME/.gradle/daemon/*.log
-        
-        echo "==== Build output ===="
-        find app/build -name "*.log" -exec cat {} \;
-    
-    - name: Archive detailed build reports
-      if: steps.gradle.outcome == 'failure'
-      uses: actions/upload-artifact@v3
-      with:
-        name: build-reports
-        path: |
-          app/build/reports/
-          $HOME/.gradle/daemon/*.log
-    
-    - name: Fail the workflow if build failed
-      if: steps.gradle.outcome == 'failure'
-      run: exit 1
+- name: Cache Gradle Build
+  uses: actions/cache@v3
+  with:
+    path: |
+      ~/.gradle/caches
+      ~/.gradle/wrapper
+      ~/.android/build-cache
+    key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle-wrapper.properties') }}
+    restore-keys: |
+      ${{ runner.os }}-gradle-
 ```
 
 ## Conclusion
 
-Implementing robust CI/CD processes for Android camera applications requires careful configuration and optimization. By following the strategies outlined in this guide, you can create reliable, efficient build pipelines that handle the complexities of camera, ML Kit, and AR integrations.
+Building Android camera applications with ML Kit and AR capabilities in CI/CD environments requires careful configuration and attention to detail. By implementing the solutions provided in this guide, you can create more reliable, reproducible builds that are less prone to the common issues that plague camera-focused Android applications.
 
-Key takeaways:
-
-1. Use centralized dependency management to avoid conflicts
-2. Configure NDK and native build settings properly
-3. Optimize memory and performance settings for resource-intensive builds
-4. Implement proper testing strategies for camera and AR functionality
-5. Use diagnostic tools and failure capture to quickly identify and fix issues
-
-With these approaches, your team can maintain a stable CI/CD pipeline while developing advanced camera features in your Android applications.
+These strategies also improve local build consistency, making it easier for team members to collaborate on complex camera integrations without running into environment-specific build problems.
