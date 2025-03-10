@@ -66,6 +66,8 @@ Check the [Easy Setup Guide](easy-setup/README.md) for more details!
 - **[Multi-Skeletal Tracking](research/multi-skeletal-tracking.md)**: Research on tracking multiple subjects (humans, cats, dogs) simultaneously
 - **[Animal Pose Detection Model](research/animal-pose-detection-model.md)**: Architecture for custom TensorFlow Lite models for animal pose detection
 - **[React Native Camera Integration](research/react-native-camera-integration.md)**: Guide for integrating camera functionality with multi-subject tracking in React Native
+- **[Future Research Directions](research/future-research-directions.md)**: Planned next steps for advancing multi-skeletal tracking research
+- **[Latest Research Findings (2025)](research/latest-research-findings-2025.md)**: Current state-of-the-art in animal motion tracking and multi-subject pose estimation
 - **[npm/Node.js Build Issues](research/npm-node-advanced-troubleshooting.md)**: In-depth troubleshooting for React Native integrations
 - **[React Native Integration Guide](research/react-native-integration-guide.md)**: Detailed guide for integrating React Native with camera functionality
 - **[CI/CD Build Solutions](research/ci-cd-build-solutions.md)**: Solutions for CI/CD build issues with camera projects
@@ -125,13 +127,14 @@ Based on our research, the most effective approach for integrating these technol
 
 ### Pose Detection
 
-| Feature | ML Kit | DeepLabCut | Custom TFLite |
-|---------|--------|------------|---------------|
-| **Multi-subject** | No | Yes | Yes |
-| **Animal Support** | No | Yes | Yes |
-| **Mobile Optimized** | Yes | No | Yes |
-| **Accuracy** | High | Very High | Customizable |
-| **Integration Complexity** | Low | High | Medium |
+| Feature | ML Kit | DeepLabCut | SLEAP | YOLOv8 Pose | Custom TFLite |
+|---------|--------|------------|-------|-------------|---------------|
+| **Multi-subject** | No | Yes | Yes | Yes | Yes |
+| **Animal Support** | No | Yes | Yes | Yes | Yes |
+| **Mobile Optimized** | Yes | No | No | Partial | Yes |
+| **Accuracy** | High | Very High | Very High | High | Customizable |
+| **Integration Complexity** | Low | High | High | Medium | Medium |
+| **Social Behavior Analysis** | No | Limited | Yes | No | Possible |
 
 ## Getting Started
 
@@ -142,6 +145,8 @@ To explore this research repository:
 3. Review the project structure for clean architecture patterns
 4. Check the sample project for a complete integration example
 5. For beginners, start with the easy setup tools
+6. Review the latest research findings to see the current state-of-the-art
+7. Check the future research directions to understand our roadmap
 
 ## Contributing
 
