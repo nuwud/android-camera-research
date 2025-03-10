@@ -35,6 +35,8 @@ Check the [Easy Setup Guide](easy-setup/README.md) for more details!
 - **[SceneView 3D/AR](sceneview-3d-ar.md)**: Using SceneView for 3D and AR development
 - **[Clean Architecture Guide](clean-architecture-guide.md)**: Architecture patterns to avoid dependency conflicts
 - **[React Native Vision Camera Analysis](react-native-vision-camera-analysis.md)**: Hybrid approach analysis
+- **[Vuforia Guide](vuforia-guide.md)**: Comprehensive guide to Vuforia implementation
+- **[Vuforia Integration](vuforia-integration.md)**: Integrating Vuforia with our camera research project
 
 ### Code Samples
 
@@ -56,6 +58,12 @@ Check the [Easy Setup Guide](easy-setup/README.md) for more details!
 - **[Performance Benchmarks](benchmarks/camera-ml-ar-benchmarks.md)**: Comparative benchmarks of different approaches
 - **[Threading & Memory Management](guides/threading-memory-management.md)**: Best practices for resource management
 
+### Advanced Research
+
+- **[npm/Node.js Build Issues](research/npm-node-advanced-troubleshooting.md)**: In-depth troubleshooting for React Native integrations
+- **[React Native Integration Guide](research/react-native-integration-guide.md)**: Detailed guide for integrating React Native with camera functionality
+- **[CI/CD Build Solutions](research/ci-cd-build-solutions.md)**: Solutions for CI/CD build issues with camera projects
+
 ### CI/CD
 
 - **[GitHub Actions Workflow](ci-cd/.github/workflows/android.yml)**: Continuous integration configuration
@@ -64,13 +72,15 @@ Check the [Easy Setup Guide](easy-setup/README.md) for more details!
 
 ### Integration Challenges
 
-1. **Camera Access Conflicts**: Camera2 API and ARCore often compete for camera access, requiring careful resource management and camera sharing configurations.
+1. **Camera Access Conflicts**: Camera2 API, ARCore, and Vuforia often compete for camera access, requiring careful resource management and camera sharing configurations.
 
-2. **Dependency Versioning**: ML Kit, ARCore, and Camera libraries frequently have conflicting dependency requirements, necessitating centralized dependency management.
+2. **Dependency Versioning**: ML Kit, ARCore, Vuforia, and camera libraries frequently have conflicting dependency requirements, necessitating centralized dependency management.
 
 3. **Native Code Issues**: NDK and ABI configurations are critical when combining libraries with native components.
 
 4. **Threading Complexity**: Frame processing, ML inference, and AR rendering each require proper threading strategies to maintain performance.
+
+5. **npm/Node.js Build Issues**: React Native camera integrations face unique challenges with npm scripts, patch-package, buffer handling, and module compilation.
 
 ### Recommended Approach
 
@@ -79,23 +89,39 @@ Based on our research, the most effective approach for integrating these technol
 1. **Clean Architecture**: Separation of concerns through well-defined modules
 2. **Centralized Dependency Management**: Using Gradle Kotlin DSL and version catalogs
 3. **Explicit Thread Management**: Dedicated threads for camera, processing, and rendering
-4. **Shared Camera Configuration**: Proper configuration of Camera2 API for shared use with ARCore
+4. **Shared Camera Configuration**: Proper configuration of Camera2 API for shared use with ARCore or Vuforia
 5. **Optimized Frame Processing**: Selective frame processing and resolution reduction for ML Kit
+6. **Strategic Camera Provider Selection**: Choosing between Camera2, ARCore, and Vuforia based on specific use cases
+
+## Technology Comparison
+
+### Camera APIs
+
+| Feature | Camera2 API | CameraX |
+|---------|------------|--------|
+| **Lifecycle Management** | Manual | Automatic |
+| **Control Level** | Fine-grained | Simplified |
+| **Configuration** | Complex | Easy |
+| **Use Cases** | Advanced camera apps | Most camera apps |
+
+### AR Technologies
+
+| Feature | ARCore | Vuforia |
+|---------|--------|--------|
+| **Focus** | Environmental tracking | Image/object recognition |
+| **Tracking Type** | Markerless | Target-based |
+| **Licensing** | Free | Commercial |
+| **Camera Integration** | Easier with Google APIs | More isolated |
 
 ## Getting Started
 
-For researchers and advanced developers looking to understand the details:
+To explore this research repository:
 
 1. Browse the core documentation files to understand the fundamental concepts
 2. Examine the code samples for practical implementation examples
 3. Review the project structure for clean architecture patterns
 4. Check the sample project for a complete integration example
-
-For beginners who just want to implement these features quickly:
-
-1. Use our [Easy Setup Tools](easy-setup/README.md) for instant integration
-2. Try the pre-configured [Starter Templates](easy-setup/starter-templates/README.md)
-3. Follow the simple step-by-step guides
+5. For beginners, start with the easy setup tools
 
 ## Contributing
 
@@ -105,6 +131,7 @@ Contributions to this research are welcome. Areas that would benefit from additi
 - Integration with additional ML models beyond pose detection
 - Advanced AR features and interactions based on skeletal tracking
 - Improved camera resource management strategies
+- Hybrid approaches using multiple AR technologies
 
 ## License
 
