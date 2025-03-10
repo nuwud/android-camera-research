@@ -6,6 +6,29 @@ A comprehensive research repository on Android camera development, with a focus 
 
 This project explores various approaches for building Android camera applications that incorporate skeletal tracking and AR capabilities. By following clean architecture patterns, we aim to minimize the common issues that arise when integrating Camera2 API, ML Kit, ARCore, and other libraries that tend to conflict with each other.
 
+## Repository Summary
+
+```
+REPOSITORY_SUMMARY
+Name: android-camera-research
+Purpose: Research on Android camera implementations for multi-skeletal tracking (humans, cats, dogs)
+Key Components:
+- Core research on ML Kit, ARCore, Vuforia for camera/AR integration
+- Implementations of multi-subject tracking algorithms
+- Custom animal pose detection models using TensorFlow Lite
+- React Native integration methods
+Latest Focus: Animal motion tracking alongside humans with perfect attribution
+Research Structure: 
+1. Foundational camera tech docs (Camera2 API, ML Kit, ARCore)
+2. Code samples demonstrating implementations
+3. Advanced research on multi-skeletal tracking
+4. Future roadmap and latest findings (2025)
+5. Benchmarking methodologies
+Primary Challenge: Tracking multiple subjects (humans+animals) simultaneously while ML Kit only supports single-human detection
+Primary Solution: Two-stage detection + custom TensorFlow models for animals + IoU tracking
+REPOSITORY_SUMMARY_END
+```
+
 ## 🚀 Quick Start for Beginners
 
 ### Want to skip the research and just implement camera features?
